@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/router.mjs": {
+      "maxDuration": 300,
+      "includeFiles": "netlify/functions/assets/fonts/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/:endpoint",
+      "destination": "/api/router?endpoint=:endpoint"
+    }
+  ]
+}
