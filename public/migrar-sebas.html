@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Exportar septiembre — sebas</title>
+<style>body{font:17px system-ui;max-width:620px;margin:60px auto;padding:20px;background:#f8fafc;color:#172033}input,button{font:inherit;padding:12px;margin:8px 0}button{cursor:pointer}progress{width:100%}</style>
+<h1>Exportar mis datos de septiembre</h1>
+<p>Cuenta: <b>sebas</b>. Incluye fotos, registros y opciones guardadas. La descarga no incluye contraseñas.</p>
+<form id="form"><label>Contraseña de tu cuenta en Netlify<br><input id="password" type="password" autocomplete="current-password" required></label><br><button id="button">Descargar copia</button></form>
+<progress id="progress" value="0" max="1"></progress><p id="status" role="status"></p>
+<script>
+const form=document.querySelector('#form'), password=document.querySelector('#password'), button=document.querySelector('#button'), status=document.querySelector('#status'), progress=document.querySelector('#progress');
+form.addEventListener('submit',async event=>{
+  event.preventDefault();button.disabled=true;
+  const secret=password.value;password.value='';
+  const read=async key=>{
+    const response=await fetch('/api/migration-export'+(key?'?key='+encodeURIComponent(key):''),{headers:{'X-User-Password':secret},cache:'no-store'});
+    if(!response.ok)throw new Error('Exportación interrumpida ('+response.status+'). Verificá tu contraseña y reintentá.');
+    return response.json();
+  };
+  try{
+    status.textContent='Buscando registros…';
+    const manifest=await read();progress.max=manifest.keys.length||1;
+    const entries=[];
+    for(const key of manifest.keys){entries.push(await read(key));progress.value=entries.length;status.textContent='Exportados '+entries.length+' de '+manifest.keys.length;}
+    const backup={version:1,usuario:'sebas',mes:'2026-09',exportado:new Date().toISOString(),entries};
+    const url=URL.createObjectURL(new Blob([JSON.stringify(backup)],{type:'application/json'}));
+    const link=document.createElement('a');link.href=url;link.download='backup-sebas-2026-09.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    status.textContent='Copia descargada: '+entries.length+' registros. Guardala en un lugar privado.';
+  }catch(error){status.textContent=error.message;}finally{button.disabled=false;}
+});
+</script></html>
